@@ -1,0 +1,50 @@
+version: 4
+
+api:
+  name: MOVUS Vibration Monitoring
+  description: Interfaces with Movus MachineCloud Dashboard by Movus Australia
+  version: 4.0.0
+  author: 
+    name: David Stone
+    email: david.stone@gpselec.com.au
+    url: https://gpselec.com.au
+    
+httpsVerification: false
+
+variables:
+  baseUrl: 
+    default: https://api.movus.com.au
+    required: true
+    hidden: true
+  apiKey:
+    required: true
+    
+authType: 
+  type: none
+  
+headers:
+  - key: Authorization
+    value: "{{var::apiKey}}"
+  
+functions:
+    devices:
+        url: "{{var::baseUrl}}/public/prod/devices"
+        method: get
+        schedule:
+          type: timer
+          duration: 5
+          unit: minutes
+        actions:
+          - action: tag
+            type: jsonExpand
+            udts:
+              - id: fitMachine
+                defPath: "{{var::apiName}}/movusFitMachine"
+                items: "{{jsonPath::$._embedded.devices[?(@.sensor_type == 'fitmachine')]}}"
+                path: "{{var::apiName}}/vibrationDevice"
+                name: "{{jsonPath::item::$.id}}"   
+              - id: fitPower
+                defPath: "{{var::apiName}}/movusFitPower"
+                items: "{{jsonPath::$._embedded.devices[?(@.sensor_type == 'fitpower')]}}"
+                path: "{{var::apiName}}/powerDevice"
+                name: "{{jsonPath::item::$.id}}"   
